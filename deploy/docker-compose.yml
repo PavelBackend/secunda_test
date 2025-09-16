@@ -1,0 +1,45 @@
+services:
+  main_service:
+    container_name: users_service
+    build:
+      context: ../api
+      dockerfile: ../deploy/Dockerfile
+    command: uvicorn api.internal.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      TZ: "Europe/Moscow"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../:/app
+    networks:
+      - secunda_backend
+    depends_on:
+      - pg_db
+
+  pg_db:
+    container_name: secunda_database
+    image: postgres:16
+    env_file:
+      - ../.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - secunda-data:/var/lib/postgresql/data
+    networks:
+      - secunda_backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+
+volumes:
+  secunda-data:
+
+networks:
+  secunda_backend:
+    driver: bridge
