@@ -17,7 +17,9 @@ services:
     networks:
       - secunda_backend
     depends_on:
-      - pg_db
+      pg_db:
+        condition: service_healthy
+      
 
   pg_db:
     container_name: secunda_database

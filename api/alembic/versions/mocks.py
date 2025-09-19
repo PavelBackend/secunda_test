@@ -90,43 +90,42 @@ def upgrade():
         ) AS v(number, org_name)
         JOIN organization o ON o.name = v.org_name
         LEFT JOIN phone p ON p.number = v.number
-        WHERE p.id IS NULL;  -- анти-join, не вставляем дубликаты
+        WHERE p.id IS NULL;
     """)
 
 
 def downgrade():
-    # op.execute("""
-    #     DELETE FROM phone
-    #     WHERE number IN (
-    #       '+7-999-111-1111', '+7-999-222-2222', '+7-999-333-3333',
-    #       '+7-999-444-4444', '+7-999-555-5555', '+7-999-666-6666'
-    #     );
-    # """)
+    op.execute("""
+        DELETE FROM phone
+        WHERE number IN (
+          '+7-999-111-1111', '+7-999-222-2222', '+7-999-333-3333',
+          '+7-999-444-4444', '+7-999-555-5555', '+7-999-666-6666'
+        );
+    """)
 
-    # op.execute("""
-    #     DELETE FROM organization_activity
-    #     WHERE organization_id IN (
-    #       SELECT id FROM organization
-    #       WHERE name IN ('Test Org 1','Test Org 2','Test Org 3','Test Org 4','Test Org 5')
-    #     );
-    # """)
+    op.execute("""
+        DELETE FROM organization_activity
+        WHERE organization_id IN (
+          SELECT id FROM organization
+          WHERE name IN ('Test Org 1','Test Org 2','Test Org 3','Test Org 4','Test Org 5')
+        );
+    """)
 
-    # op.execute("""
-    #     DELETE FROM organization
-    #     WHERE name IN ('Test Org 1','Test Org 2','Test Org 3','Test Org 4','Test Org 5');
-    # """)
+    op.execute("""
+        DELETE FROM organization
+        WHERE name IN ('Test Org 1','Test Org 2','Test Org 3','Test Org 4','Test Org 5');
+    """)
 
-    # op.execute("""
-    #     DELETE FROM activity
-    #     WHERE name IN (
-    #       'Frontend','Backend','iOS','Android','Primary School','High School','General Medicine',
-    #       'Web Development','Mobile Development','School Education','University Education','Clinic',
-    #       'IT Services','Education','Healthcare'
-    #     );
-    # """)
+    op.execute("""
+        DELETE FROM activity
+        WHERE name IN (
+          'Frontend','Backend','iOS','Android','Primary School','High School','General Medicine',
+          'Web Development','Mobile Development','School Education','University Education','Clinic',
+          'IT Services','Education','Healthcare'
+        );
+    """)
 
-    # op.execute("""
-    #     DELETE FROM building
-    #     WHERE address IN ('Main Street 1','Main Street 2','Main Street 3');
-    # """)
-  pass
+    op.execute("""
+        DELETE FROM building
+        WHERE address IN ('Main Street 1','Main Street 2','Main Street 3');
+    """)
