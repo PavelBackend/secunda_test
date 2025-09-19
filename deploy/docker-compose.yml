@@ -1,6 +1,6 @@
 services:
   main_service:
-    container_name: users_service
+    container_name: secunda_service
     build:
       context: ../api
       dockerfile: ../deploy/Dockerfile
