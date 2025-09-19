@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Depends, Security
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...security import require_api_key
-from ...depends import get_organizations_service
-from ..services.organizations import OrganizationsService
 from ...database import get_async_session
-
+from ...depends import get_organizations_service
+from ...security import require_api_key
+from ..services.organizations import OrganizationsService
 
 router = APIRouter(
-    prefix='/organizations',
-    tags=['organizations'],
-    dependencies=[Security(require_api_key)]
+    prefix="/organizations",
+    tags=["organizations"],
+    dependencies=[Security(require_api_key)],
 )
 
 
@@ -35,7 +34,9 @@ async def get_organizations_by_activity_exact(
     session: AsyncSession = Depends(get_async_session),
 ):
     filters = {"activity_id": activity_id, "activity_scope": "exact"}
-    return await organizations_service.get_all_organizations_by_filters(filters=filters, session=session)
+    return await organizations_service.get_all_organizations_by_filters(
+        filters=filters, session=session
+    )
 
 
 @router.get(
@@ -47,7 +48,9 @@ async def get_organizations_by_activity_tree(
     session: AsyncSession = Depends(get_async_session),
 ):
     filters = {"activity_id": activity_id, "activity_scope": "tree"}
-    return await organizations_service.get_all_organizations_by_filters(filters=filters, session=session)
+    return await organizations_service.get_all_organizations_by_filters(
+        filters=filters, session=session
+    )
 
 
 @router.get("/by_radius")

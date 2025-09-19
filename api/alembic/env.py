@@ -1,14 +1,16 @@
-from logging.config import fileConfig
-import sys
 import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncConnection
-from sqlalchemy import pool
-from alembic import context
-from api.config import settings
-from os.path import dirname, join, abspath
+import sys
+from logging.config import fileConfig
+from os.path import abspath, dirname, join
 
-ROOT_PATH = abspath(join(dirname(__file__), '..', '..'))
-API_PATH = join(ROOT_PATH, 'api')
+from alembic import context
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+
+from api.config import settings
+
+ROOT_PATH = abspath(join(dirname(__file__), "..", ".."))
+API_PATH = join(ROOT_PATH, "api")
 sys.path.insert(0, API_PATH)
 
 from internal.orm_models.dao import *
@@ -26,6 +28,7 @@ config.set_section_option(section, "DB_PASS", settings.POSTGRES_PASSWORD)
 
 target_metadata = Base.metadata
 
+
 def run_migrations_offline() -> None:
     url = settings.db_dsn
     context.configure(
@@ -36,6 +39,7 @@ def run_migrations_offline() -> None:
     )
     with context.begin_transaction():
         context.run_migrations()
+
 
 def do_run_migrations(connection: AsyncConnection) -> None:
     context.configure(
@@ -48,22 +52,21 @@ def do_run_migrations(connection: AsyncConnection) -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 async def run_async_migrations() -> None:
     async_dsn = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
-    
-    connectable = create_async_engine(
-        async_dsn,
-        poolclass=pool.NullPool,
-        echo=True
-    )
+
+    connectable = create_async_engine(async_dsn, poolclass=pool.NullPool, echo=True)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
 
     await connectable.dispose()
 
+
 async def run_migrations_online() -> None:
     await run_async_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

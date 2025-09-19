@@ -1,35 +1,49 @@
 from typing import Any, Callable, Dict
+
 from geoalchemy2 import Geography
-from sqlalchemy.orm import aliased
-from sqlalchemy import and_, literal, select, func, cast
+from sqlalchemy import and_, cast, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from ..orm_models.dao import Activity, Building, Organization
 
 
 class OrganizationsRepo:
-    async def get_all_organizations_by_filters(self, filters: Dict[str, Any], session: AsyncSession):
+    async def get_all_organizations_by_filters(
+        self, filters: Dict[str, Any], session: AsyncSession
+    ):
         stmt = select(Organization)
 
-        key = "radius" if "radius" in filters else next(k for k in ("org_id","name","building_id","activity_id") if k in filters)
+        key = (
+            "radius"
+            if "radius" in filters
+            else next(
+                k
+                for k in ("org_id", "name", "building_id", "activity_id")
+                if k in filters
+            )
+        )
 
         handlers: Dict[str, Callable[[Any], Any]] = {
-            "org_id":      lambda v: self._h_org_id(stmt, int(v)),
-            "name":        lambda v: self._h_name(stmt, str(v)),
+            "org_id": lambda v: self._h_org_id(stmt, int(v)),
+            "name": lambda v: self._h_name(stmt, str(v)),
             "building_id": lambda v: self._h_building(stmt, int(v)),
-            "activity_id": lambda v: self._h_activity(stmt, int(v), include_descendants=(filters.get("activity_scope") == "tree")),
-            "radius":      lambda _: self._h_radius(
-                                stmt,
-                                lat=float(filters["lat"]),
-                                lon=float(filters["lon"]),
-                                radius=float(filters["radius"]),
-                             ),
+            "activity_id": lambda v: self._h_activity(
+                stmt,
+                int(v),
+                include_descendants=(filters.get("activity_scope") == "tree"),
+            ),
+            "radius": lambda _: self._h_radius(
+                stmt,
+                lat=float(filters["lat"]),
+                lon=float(filters["lon"]),
+                radius=float(filters["radius"]),
+            ),
         }
 
         stmt = handlers[key](filters.get(key))
         result = await session.execute(stmt)
         return result.scalars().unique().all()
-
 
     def _h_org_id(self, stmt, org_id: int):
         return stmt.where(Organization.id == org_id)
@@ -51,13 +65,16 @@ class OrganizationsRepo:
         )
         a2 = aliased(Activity)
         cte = cte.union_all(
-            select(a2.id, cte.c.lvl + 1).where(and_(a2.parent_id == cte.c.id, cte.c.lvl < 2))
+            select(a2.id, cte.c.lvl + 1).where(
+                and_(a2.parent_id == cte.c.id, cte.c.lvl < 2)
+            )
         )
-        return stmt.join(Organization.activities).where(Activity.id.in_(select(cte.c.id)))
+        return stmt.join(Organization.activities).where(
+            Activity.id.in_(select(cte.c.id))
+        )
 
     def _h_radius(self, stmt, *, lat: float, lon: float, radius: float):
         point = cast(func.ST_SetSRID(func.ST_MakePoint(lon, lat), 4326), Geography)
-        return (
-            stmt.join(Building, Building.id == Organization.building_id)
-                .where(func.ST_DWithin(cast(Building.location, Geography), point, radius))
+        return stmt.join(Building, Building.id == Organization.building_id).where(
+            func.ST_DWithin(cast(Building.location, Geography), point, radius)
         )

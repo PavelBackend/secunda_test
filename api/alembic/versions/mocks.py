@@ -7,24 +7,29 @@ depends_on = None
 
 
 def upgrade():
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO building (address, location)
         VALUES
           ('Main Street 1', ST_SetSRID(ST_MakePoint(37.618423, 55.751244), 4326)::geography),
           ('Main Street 2', ST_SetSRID(ST_MakePoint(37.619000, 55.752000), 4326)::geography),
           ('Main Street 3', ST_SetSRID(ST_MakePoint(30.3350986, 59.9342802), 4326)::geography)
         ON CONFLICT (address) DO NOTHING;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO activity (name, parent_id) VALUES
           ('IT Services', NULL),
           ('Education',   NULL),
           ('Healthcare',  NULL)
         ON CONFLICT (name) DO NOTHING;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO activity (name, parent_id) VALUES
           ('Web Development',    (SELECT id FROM activity WHERE name='IT Services')),
           ('Mobile Development', (SELECT id FROM activity WHERE name='IT Services')),
@@ -32,9 +37,11 @@ def upgrade():
           ('University Education',(SELECT id FROM activity WHERE name='Education')),
           ('Clinic',             (SELECT id FROM activity WHERE name='Healthcare'))
         ON CONFLICT (name) DO NOTHING;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO activity (name, parent_id) VALUES
           ('Frontend',         (SELECT id FROM activity WHERE name='Web Development')),
           ('Backend',          (SELECT id FROM activity WHERE name='Web Development')),
@@ -44,9 +51,11 @@ def upgrade():
           ('High School',      (SELECT id FROM activity WHERE name='School Education')),
           ('General Medicine', (SELECT id FROM activity WHERE name='Clinic'))
         ON CONFLICT (name) DO NOTHING;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO organization (name, building_id) VALUES
           ('Test Org 1', (SELECT id FROM building WHERE address='Main Street 1')),
           ('Test Org 2', (SELECT id FROM building WHERE address='Main Street 1')),
@@ -54,9 +63,11 @@ def upgrade():
           ('Test Org 4', (SELECT id FROM building WHERE address='Main Street 3')),
           ('Test Org 5', (SELECT id FROM building WHERE address='Main Street 3'))
         ON CONFLICT (name) DO NOTHING;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO organization_activity (organization_id, activity_id)
         SELECT o.id, a.id
         FROM (VALUES
@@ -74,9 +85,11 @@ def upgrade():
         JOIN organization o ON o.name = x.org_name
         JOIN activity     a ON a.name = x.act_name
         ON CONFLICT DO NOTHING;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO phone (number, organization_id)
         SELECT v.number, o.id
         FROM (
@@ -91,41 +104,52 @@ def upgrade():
         JOIN organization o ON o.name = v.org_name
         LEFT JOIN phone p ON p.number = v.number
         WHERE p.id IS NULL;
-    """)
+    """
+    )
 
 
 def downgrade():
-    op.execute("""
+    op.execute(
+        """
         DELETE FROM phone
         WHERE number IN (
           '+7-999-111-1111', '+7-999-222-2222', '+7-999-333-3333',
           '+7-999-444-4444', '+7-999-555-5555', '+7-999-666-6666'
         );
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         DELETE FROM organization_activity
         WHERE organization_id IN (
           SELECT id FROM organization
           WHERE name IN ('Test Org 1','Test Org 2','Test Org 3','Test Org 4','Test Org 5')
         );
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         DELETE FROM organization
         WHERE name IN ('Test Org 1','Test Org 2','Test Org 3','Test Org 4','Test Org 5');
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         DELETE FROM activity
         WHERE name IN (
           'Frontend','Backend','iOS','Android','Primary School','High School','General Medicine',
           'Web Development','Mobile Development','School Education','University Education','Clinic',
           'IT Services','Education','Healthcare'
         );
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         DELETE FROM building
         WHERE address IN ('Main Street 1','Main Street 2','Main Street 3');
-    """)
+    """
+    )
