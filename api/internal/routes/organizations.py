@@ -25,9 +25,7 @@ async def get_organizations_by_building(
     )
 
 
-@router.get(
-    "/activities/{activity_id}/organizations",
-)
+@router.get("/activities/{activity_id}/organizations")
 async def get_organizations_by_activity_exact(
     activity_id: int,
     organizations_service: OrganizationsService = Depends(get_organizations_service),
@@ -39,9 +37,7 @@ async def get_organizations_by_activity_exact(
     )
 
 
-@router.get(
-    "/activities/{activity_id}/organizations/tree",
-)
+@router.get("/activities/{activity_id}/organizations/tree")
 async def get_organizations_by_activity_tree(
     activity_id: int,
     organizations_service: OrganizationsService = Depends(get_organizations_service),
