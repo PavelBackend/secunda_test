@@ -2,9 +2,9 @@ services:
   main_service:
     container_name: secunda_service
     build:
-      context: ../api
-      dockerfile: ../deploy/Dockerfile
-    command: uvicorn api.internal.main:app --host 0.0.0.0 --port 8000 --reload
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: sh -c "alembic -c api/alembic.ini upgrade head && uvicorn api.internal.main:app --host 0.0.0.0 --port 8000 --reload"
     restart: unless-stopped
     env_file:
       - ../.env
@@ -33,7 +33,7 @@ services:
     networks:
       - secunda_backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       retries: 5
       start_period: 30s

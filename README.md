@@ -1,20 +1,22 @@
 Описание:
-- Убрал .env из .gitignore для легкого запуска тестового, в реальный проектах так, конечно, не делаю
-- Для авторизации в документации справа вверху кнопка authorize, туда вставляем TfeP1_MhMB0qKt16IKr0EB6vadQP7dSTfblxO72L8Fg
+- Для авторизации в документации справа вверху находится кнопка "Authorize", туда необходимо вставить API KEY: TfeP1_MhMB0qKt16IKr0EB6vadQP7dSTfblxO72L8Fg
 
 Запуск:
 # Клонируем репозиторий
-git clone https://github.com/PavelBackend/secunda_test.git
+git clone https://github.com/PavelBackend/secunda_test.git && cd secunda_test
 
-# Запускаем контейнеры
-docker compose -f secunda_test/deploy/docker-compose.yml --env-file secunda_test/.env up --build -d
+# Копируем конфиг окружения
+cp .env.example .env
 
-# Применяем миграции
-docker compose -f secunda_test/deploy/docker-compose.yml exec main_service alembic -c api/alembic.ini upgrade head
+# Запускаем контейнеры (миграции применяются автоматически при старте)
+docker compose -f deploy/docker-compose.yml up --build -d
 
-http://localhost:8000/docs будет доступна документация
+По пути http://localhost:8000/docs будет доступна документация
 
-# Тестовые данные, уже добавленные в миграции:
+# Прогон автотестов (выполняются в отдельной БД secunda_test, создаётся автоматически)
+docker compose -f deploy/docker-compose.yml exec main_service pytest
+
+# Данные для ручного тестирования (уже добавленные в миграции):
 
 Здания
 1. Main Street 1 — Москва центр (lat=55.751244, lon=37.618423)
@@ -36,4 +38,7 @@ http://localhost:8000/docs будет доступна документация
 5. Healthcare → Clinic → General Medicine
 
 # Останавливаем контейнеры
-docker compose -f secunda_test/deploy/docker-compose.yml down (-v чтобы удалить тома не забудьте после просмотра тестового, у вас же еще будут тестовые с базой на дефолтном порте))
+docker compose -f deploy/docker-compose.yml down
+
+# Остановка контейнеров и удаление томов
+docker compose -f deploy/docker-compose.yml down -v
