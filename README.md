@@ -1,44 +1,103 @@
-Описание:
-- Для авторизации в документации справа вверху находится кнопка "Authorize", туда необходимо вставить API KEY: TfeP1_MhMB0qKt16IKr0EB6vadQP7dSTfblxO72L8Fg
+# REST API справочника организаций
 
-Запуск:
+REST API на FastAPI для работы с каталогом организаций, зданий и видов деятельности.
+
+## Стек
+
+- **FastAPI** + **Pydantic** — веб-фреймворк и валидация
+- **SQLAlchemy 2.0 async** + **asyncpg** — асинхронная работа с БД
+- **GeoAlchemy2** + **PostGIS** — геопространственные запросы
+- **Alembic** — миграции
+- **PostgreSQL 16** — база данных
+- **Docker** + **Docker Compose** — контейнеризация
+- **Poetry** — управление зависимостями
+
+## Реализованный функционал
+
+- Список организаций в конкретном здании
+- Список организаций по виду деятельности (прямое соответствие)
+- Список организаций по дереву деятельности — поиск с учётом всех дочерних видов деятельности (до 3 уровней вложенности)
+- Поиск организаций в заданном радиусе от точки на карте (через `ST_DWithin`)
+- Поиск организаций в прямоугольной области (через `ST_Intersects`)
+- Поиск организаций по названию (регистронезависимый, частичное совпадение)
+- Получение информации об организации по идентификатору
+- Авторизация через статический API-ключ в заголовке `X-API-Key`
+- Swagger UI с описанием всех методов: `http://localhost:8000/docs`
+
+## Запуск
+
+```bash
 # Клонируем репозиторий
 git clone https://github.com/PavelBackend/secunda_test.git && cd secunda_test
 
 # Копируем конфиг окружения
 cp .env.example .env
 
-# Запускаем контейнеры (миграции применяются автоматически при старте)
+# Запускаем контейнеры (миграции и заполнение тестовыми данными применяются автоматически)
 docker compose -f deploy/docker-compose.yml up --build -d
+```
 
-По пути http://localhost:8000/docs будет доступна документация
+Документация будет доступна по адресу `http://localhost:8000/docs`.
 
-# Прогон автотестов (выполняются в отдельной БД secunda_test, создаётся автоматически)
+Для авторизации в Swagger нажмите кнопку **Authorize** (правый верхний угол) и введите API-ключ TfeP1_MhMB0qKt16IKr0EB6vadQP7dSTfblxO72L8Fg.
+
+## Тесты
+
+```bash
+# Запуск автотестов (выполняются в отдельной БД, создаётся автоматически)
 docker compose -f deploy/docker-compose.yml exec main_service pytest
+```
 
-# Данные для ручного тестирования (уже добавленные в миграции):
+## Управление контейнерами
 
-Здания
-1. Main Street 1 — Москва центр (lat=55.751244, lon=37.618423)
-2. Main Street 2 — рядом с #1 (lat=55.752000, lon=37.619000)
-3. Main Street 3 — Санкт-Петербург (lat=59.9342802, lon=30.3350986)
-
-Организации
-1. Test Org 1 → Main Street 1 → активности: Web Development, Frontend
-2. Test Org 2 → Main Street 1 → University Education, High School
-3. Test Org 3 → Main Street 2 → Mobile Development, Android
-4. Test Org 4 → Main Street 3 → Clinic, General Medicine
-5. Test Org 5 → Main Street 3 → School Education, Primary School
-
-Активности:
-1. IT Services → Web Development → Frontend/Backend
-2. IT Services → Mobile Development → iOS/Android
-3. Education → School Education → Primary/High School
-4. Education → University Education
-5. Healthcare → Clinic → General Medicine
-
-# Останавливаем контейнеры
+```bash
+# Остановка
 docker compose -f deploy/docker-compose.yml down
 
-# Остановка контейнеров и удаление томов
+# Остановка с удалением томов
 docker compose -f deploy/docker-compose.yml down -v
+```
+
+## Тестовые данные
+
+Данные добавляются автоматически через миграцию при старте.
+
+**Здания:**
+
+| Адрес | Координаты |
+|-------|-----------|
+| Main Street 1 | 55.751244, 37.618423 (Москва) |
+| Main Street 2 | 55.752000, 37.619000 (рядом с #1) |
+| Main Street 3 | 59.934280, 30.335099 (Санкт-Петербург) |
+
+**Организации:**
+
+| Организация | Здание | Виды деятельности |
+|-------------|--------|-------------------|
+| Test Org 1 | Main Street 1 | Web Development, Frontend |
+| Test Org 2 | Main Street 1 | University Education, High School |
+| Test Org 3 | Main Street 2 | Mobile Development, Android |
+| Test Org 4 | Main Street 3 | Clinic, General Medicine |
+| Test Org 5 | Main Street 3 | School Education, Primary School |
+
+**Дерево деятельности (3 уровня):**
+
+```
+IT Services
+├── Web Development
+│   ├── Frontend
+│   └── Backend
+└── Mobile Development
+    ├── iOS
+    └── Android
+
+Education
+├── School Education
+│   ├── Primary School
+│   └── High School
+└── University Education
+
+Healthcare
+└── Clinic
+    └── General Medicine
+```
